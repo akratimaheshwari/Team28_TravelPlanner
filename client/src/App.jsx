@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
+import ItinaryandExpense from './pages/Home';
 import { Loader2 } from 'lucide-react';
 // Import the CSS file
 import './index.css'; 
