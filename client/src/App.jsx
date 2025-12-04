@@ -7,6 +7,7 @@ import ItinaryandExpense from './pages/Home';
 import { Loader2 } from 'lucide-react';
 // Import the CSS file
 import './index.css'; 
+import "./app.css"; 
 
 function AppContent() {
   const [showLogin, setShowLogin] = useState(true);

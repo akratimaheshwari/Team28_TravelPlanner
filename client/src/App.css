@@ -1,42 +1,288 @@
-#root {
+/* -----------------------------------------------------
+   GLOBAL + THEME
+----------------------------------------------------- */
+:root {
+  --primary: #2563eb;      /* Blue */
+  --primary-dark: #1d4ed8;
+  --secondary: #0f766e;    /* Teal */
+  --secondary-dark: #0d6b63;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --bg-light: #f8fafc;
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+body {
+  background: var(--bg-light);
+  font-family: "Inter", sans-serif;
+}
+
+/* -----------------------------------------------------
+   NAVBAR
+----------------------------------------------------- */
+.navbar {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-content {
   max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  margin: auto;
+  height: 4rem;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.logo-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--primary);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
 }
 
-.card {
-  padding: 2em;
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.read-the-docs {
-  color: #888;
+.profile-button, .signout-button {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 150ms;
+}
+
+.profile-button:hover,
+.signout-button:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.profile-icon,
+.signout-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+/* -----------------------------------------------------
+   CAROUSEL
+----------------------------------------------------- */
+.hero-carousel-wrapper {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 800ms ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hero-slide.prev {
+  transform: translateX(-100%);
+}
+
+.slide-background {
+  inset: 0;
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.65);
+}
+
+.slide-content {
+  z-index: 10;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+}
+
+.slide-text-box {
+  max-width: 750px;
+}
+
+.slide-title {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.slide-description {
+  font-size: 1.2rem;
+  color: #e5e7eb;
+}
+
+/* Icon bubble */
+.slide-icon-wrapper {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 9999px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.slide-icon {
+  color: white;
+  width: 2.3rem;
+  height: 2.3rem;
+}
+
+/* Navigation arrows */
+.carousel-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.2);
+  padding: 0.7rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  z-index: 50;
+  transition: 200ms;
+}
+
+.carousel-nav-button:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav-button.left {
+  left: 1rem;
+}
+.carousel-nav-button.right {
+  right: 1rem;
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Dots */
+.carousel-indicators {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.indicator-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: rgba(255,255,255,0.5);
+  border-radius: 9999px;
+  border: none;
+  transition: 300ms;
+}
+
+.active-dot {
+  width: 2rem;
+  background: white;
+}
+
+/* -----------------------------------------------------
+   TRIP SECTION
+----------------------------------------------------- */
+.trip-manager-section {
+  max-width: 1280px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.trip-manager-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.header-subtitle {
+  color: var(--text-light);
+}
+
+/* Buttons */
+.button-primary,
+.button-secondary {
+  padding: 0.75rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  cursor: pointer;
+  transition: 200ms;
+}
+
+/* Primary */
+.button-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.button-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-3px);
+}
+
+/* Secondary */
+.button-secondary {
+  background: white;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.button-secondary:hover {
+  background: #eff6ff;
+  transform: translateY(-3px);
+}
+
+/* Lift Effect */
+.button-hover-lift:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
