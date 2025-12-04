@@ -1,11 +1,13 @@
-const router = require("express").Router();
-const auth = require("../middleware/auth");
-const {
-  addExpense,
-  getTripExpenses
-} = require("../controllers/expenseController");
+const express = require('express');
+const router = express.Router();
+const { verifyToken } = require('../middleware/auth');
+const expenseController = require('../controllers/expenseController');
 
-router.post("/", auth, addExpense);
-router.get("/trip/:tripId", auth, getTripExpenses);
+
+router.post('/:tripId', verifyToken, expenseController.addExpense);
+router.get('/:tripId', verifyToken, expenseController.getExpensesForTrip);
+router.get('/:tripId/summary', verifyToken, expenseController.getSettlementSummary);
+router.delete('/:id', verifyToken, expenseController.deleteExpense);
+
 
 module.exports = router;

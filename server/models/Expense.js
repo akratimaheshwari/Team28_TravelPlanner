@@ -1,23 +1,23 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
 
-const SplitSchema = new Schema({
-user: { type: Schema.Types.ObjectId, ref: 'User' },
-share: Number // e.g., fraction or absolute amount depending on type
+const ExpenseSchema = new mongoose.Schema({
+trip: { type: mongoose.Schema.Types.ObjectId, ref: 'Trip', required: true, index: true },
+title: { type: String, required: true },
+amount: { type: Number, required: true },
+currency: { type: String },
+paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+splits: [{
+user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+share: { type: Number, required: true } // absolute amount owed by this user for this expense
+}],
+type: { type: String, enum: ['equal','percentage','custom'], default: 'equal' },
+notes: String,
+createdAt: { type: Date, default: Date.now }
 });
 
 
-const ExpenseSchema = new Schema({
-trip: { type: Schema.Types.ObjectId, ref: 'Trip' },
-title: String,
-amount: Number,
-currency: String,
-paidBy: { type: Schema.Types.ObjectId, ref: 'User' },
-splits: [SplitSchema],
-note: String,
-date: Date
-}, { timestamps: true });
+ExpenseSchema.index({ trip: 1 });
 
 
 module.exports = mongoose.model('Expense', ExpenseSchema);
