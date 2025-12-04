@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Map, Loader2 } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 
-export default function Login({ onToggle }) {
+export default function SignUp({ onToggle }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signIn, loading } = useAuth();
+  const { signUp, loading } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,10 +15,15 @@ export default function Login({ onToggle }) {
       setError('Please fill out all fields.');
       return;
     }
+    // Basic password validation
+    if (password.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+    }
     try {
-      await signIn(email, password);
+      await signUp(email, password);
     } catch (err) {
-      setError('Failed to sign in. Check your credentials.');
+      setError('Failed to create an account. Email might be in use.');
     }
   };
 
@@ -26,9 +31,9 @@ export default function Login({ onToggle }) {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e0f7fa' }}>
       <div className="modal-content" style={{ maxWidth: '400px' }}>
         <div className="text-center" style={{ marginBottom: '2rem' }}>
-          <Map style={{ color: '#2563eb', width: '2rem', height: '2rem', margin: '0 auto' }} />
-          <h1 className="modal-title" style={{ marginTop: '0.5rem' }}>Welcome Back</h1>
-          <p style={{ color: '#6b7280' }}>Sign in to manage your trips</p>
+          <Users style={{ color: '#2563eb', width: '2rem', height: '2rem', margin: '0 auto' }} />
+          <h1 className="modal-title" style={{ marginTop: '0.5rem' }}>Create Account</h1>
+          <p style={{ color: '#6b7280' }}>Start planning your group adventures</p>
         </div>
         
         <form onSubmit={handleSubmit}>
@@ -44,7 +49,7 @@ export default function Login({ onToggle }) {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min 6 chars)"
             className="input-field"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -55,15 +60,15 @@ export default function Login({ onToggle }) {
             {loading ? (
               <Loader2 style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.5rem', animation: 'spin 1s linear infinite' }} />
             ) : (
-              'Login'
+              'Sign Up'
             )}
           </button>
         </form>
 
         <div className="text-center" style={{ marginTop: '1.5rem', fontSize: '0.875rem' }}>
-          Don't have an account?{' '}
+          Already have an account?{' '}
           <button onClick={onToggle} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-            Sign Up
+            Login
           </button>
         </div>
       </div>
