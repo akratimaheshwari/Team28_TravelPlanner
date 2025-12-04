@@ -37,7 +37,7 @@ export default function SignUp({ onToggle }) {
         </div>
         
         <form onSubmit={handleSubmit}>
-          {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>}
+          {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }} role="alert">{error}</p>}
           
           <input
             type="email"
@@ -46,6 +46,7 @@ export default function SignUp({ onToggle }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            aria-label="Email Address"
           />
           <input
             type="password"
@@ -54,6 +55,7 @@ export default function SignUp({ onToggle }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            aria-label="Password"
           />
           
           <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={loading}>
