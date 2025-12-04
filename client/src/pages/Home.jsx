@@ -1,215 +1,262 @@
-import React, { useState, useEffect } from 'react';
-// Assuming these imports exist in your project structure
-import { useAuth } from '../contexts/AuthContext';
-import TripList from '../components/TripList';
-import CreateTripModal from '../components/CreateTripModal';
-import JoinTripModal from '../components/JoinTripModal';
+import { useState, useEffect } from 'react';
+import { Plus, Calendar, Users, ArrowRight } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useApp } from '../context/AppContext';
+import Button from '../components/Button';
+import Modal from '../components/Modal';
 
-// Icon placeholders (since we can't use lucide-react without dependency,
-// I'll assume simple text or simple inline SVG/Unicode for production,
-// but for this example, I'll use simple characters or text placeholders
-// and descriptive class names.)
+export default function Home({ onNavigate }) {
+  const [trips, setTrips] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { currentUser, setCurrentTrip } = useApp();
 
-// If you insist on using lucide-react (as in your original code), you must have the dependency installed.
-// Assuming the icons are available for structure:
-import { Plus, LogOut, Map, Users, DollarSign, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+  useEffect(() => {
+    loadTrips();
+  }, [currentUser]);
 
+  const loadTrips = async () => {
+    const { data: memberData } = await supabase
+      .from('trip_members')
+      .select('trip_id')
+      .eq('user_id', currentUser.user_id);
 
-const heroSlides = [
-  {
-    title: 'Plan Together, Travel Better',
-    description: 'Collaborate with friends to create the perfect itinerary',
-    Icon: Map,
-    color: 'linear-gradient(to right, #3b82f6, #06b6d4)', // Blue to Cyan
-    image: 'https://images.pexels.com/photos/346885/pexels-photo-346885.jpeg?auto=compress&cs=tinysrgb&w=1920'
-  },
-  {
-    title: 'Split Expenses Fairly',
-    description: 'Track and settle shared costs with intelligent debt simplification',
-    Icon: DollarSign,
-    color: 'linear-gradient(to right, #10b981, #059669)', // Green to Emerald
-    image: 'https://images.pexels.com/photos/1268855/pexels-photo-1268855.jpeg?auto=compress&cs=tinysrgb&w=1920'
-  },
-  {
-    title: 'Keep Everything Organized',
-    description: 'Store tickets, bookings, and documents in one place',
-    Icon: FileText,
-    color: 'linear-gradient(to right, #f97316, #ef4444)', // Orange to Red
-    image: 'https://images.pexels.com/photos/1371360/pexels-photo-1371360.jpeg?auto=compress&cs=tinysrgb&w=1920'
-  },
-  {
-    title: 'Decide as a Group',
-    description: 'Vote on hotels, activities, and make group decisions easy',
-    Icon: Users,
-    color: 'linear-gradient(to right, #ec4899, #f43f5e)', // Pink to Rose
-    image: 'https://images.pexels.com/photos/3184433/pexels-photo-3184433.jpeg?auto=compress&cs=tinysrgb&w=1920'
-  }
-];
+    if (memberData && memberData.length > 0) {
+      const tripIds = memberData.map(m => m.trip_id);
+      const { data: tripsData } = await supabase
+        .from('trips')
+        .select('*')
+        .in('id', tripIds)
+        .order('created_at', { ascending: false });
 
-export default function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { signOut } = useAuth();
+      if (tripsData) {
+        const tripsWithMembers = await Promise.all(
+          tripsData.map(async (trip) => {
+            const { data: members } = await supabase
+              .from('trip_members')
+              .select('*')
+              .eq('trip_id', trip.id);
+            return { ...trip, members: members || [] };
+          })
+        );
+        setTrips(tripsWithMembers);
+      }
+    }
+  };
 
-  // Auto-slide effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
+  const handleViewTrip = (trip) => {
+    setCurrentTrip(trip);
+    onNavigate('trip-dashboard');
+  };
 
-    return () => clearInterval(timer);
-  }, []);
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">My Trips</h1>
+            <p className="text-gray-600 mt-2">Plan, collaborate, and track expenses together</p>
+          </div>
+          <Button onClick={() => setShowCreateModal(true)} size="lg">
+            <Plus className="h-5 w-5 mr-2" />
+            Create Trip
+          </Button>
+        </div>
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-  };
+        {trips.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No trips yet</h3>
+            <p className="text-gray-600 mb-6">Create your first trip to get started</p>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-5 w-5 mr-2" />
+              Create Your First Trip
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} onView={handleViewTrip} />
+            ))}
+          </div>
+        )}
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-  };
+        <CreateTripModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            loadTrips();
+            setShowCreateModal(false);
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
-  const handleTripCreated = () => {
-    setShowCreateModal(false);
-    setRefreshTrigger(prev => prev + 1);
-  };
+function TripCard({ trip, onView }) {
+  const startDate = new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const endDate = new Date(trip.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  const handleTripJoined = () => {
-    setShowJoinModal(false);
-    setRefreshTrigger(prev => prev + 1);
-  };
+  return (
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div
+        className="h-40 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center"
+        style={trip.cover_image ? { backgroundImage: `url(${trip.cover_image})`, backgroundSize: 'cover' } : {}}
+      >
+        {!trip.cover_image && (
+          <Calendar className="h-12 w-12 text-white opacity-50" />
+        )}
+      </div>
 
-  return (
-    <div className="home-container">
-      {/* --- Navigation Bar --- */}
-      <nav className="navbar">
-        <div className="navbar-content">
-          <div className="logo">
-            <Map className="logo-icon" />
-            <span className="logo-text">TravelSync</span>
-          </div>
-          <button
-            onClick={signOut}
-            className="signout-button"
-          >
-            <LogOut className="signout-icon" />
-            <span className="signout-text">Sign Out</span>
-          </button>
-        </div>
-      </nav>
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{trip.name}</h3>
+        <p className="text-sm text-gray-600 mb-4">{trip.description}</p>
 
-      {/* --- Hero Carousel Section --- */}
-      <div className="hero-carousel-wrapper">
-        {heroSlides.map((slide, index) => {
-          const Icon = slide.Icon;
-          return (
-            <div
-              key={index}
-              className={`hero-slide ${
-                index === currentSlide
-                  ? 'active'
-                  : index < currentSlide
-                  ? 'prev'
-                  : 'next'
-              }`}
-            >
-              {/* Background Image with overlay */}
-              <div
-                className="slide-background"
-                style={{ backgroundImage: `url(${slide.image})` }}
-              >
-                <div className="slide-overlay" />
-              </div>
+        <div className="flex items-center text-sm text-gray-600 mb-4">
+          <Calendar className="h-4 w-4 mr-2" />
+          <span>{startDate} - {endDate}</span>
+        </div>
 
-              {/* Content */}
-              <div className="slide-content">
-                <div className="slide-text-box">
-                  <div 
-                    className="slide-icon-wrapper"
-                    style={{ backgroundImage: slide.color }}
-                  >
-                    <Icon className="slide-icon" />
-                  </div>
-                  <h1 className="slide-title">{slide.title}</h1>
-                  <p className="slide-description">{slide.description}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-sm text-gray-600">
+            <Users className="h-4 w-4 mr-2" />
+            <span>{trip.members?.length || 0} members</span>
+          </div>
 
-        {/* Carousel Navigation Buttons */}
-        <button
-          onClick={prevSlide}
-          className="carousel-nav-button left"
-        >
-          <ChevronLeft className="nav-icon" />
-        </button>
+          <button
+            onClick={() => onView(trip)}
+            className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
+          >
+            View
+            <ArrowRight className="h-4 w-4 ml-1" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        <button
-          onClick={nextSlide}
-          className="carousel-nav-button right"
-        >
-          <ChevronRight className="nav-icon" />
-        </button>
+function CreateTripModal({ isOpen, onClose, onSuccess }) {
+  const { currentUser } = useApp();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    start_date: '',
+    end_date: '',
+    cover_image: ''
+  });
 
-        {/* Carousel Indicators */}
-        <div className="carousel-indicators">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`indicator-dot ${index === currentSlide ? 'active-dot' : ''}`}
-            />
-          ))}
-        </div>
-      </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      {/* --- Trip Management Section --- */}
-      <div className="trip-manager-section">
-        <div className="trip-manager-header">
-          <div className="header-info">
-            <h2 className="header-title">Your Trips</h2>
-            <p className="header-subtitle">Manage your adventures and expenses</p>
-          </div>
-          <div className="header-actions">
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="button-secondary"
-            >
-              <Users className="button-icon" />
-              <span>Join Trip</span>
-            </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="button-primary"
-            >
-              <Plus className="button-icon" />
-              <span>Create Trip</span>
-            </button>
-          </div>
-        </div>
+    const { data: trip, error } = await supabase
+      .from('trips')
+      .insert([{
+        ...formData,
+        created_by: currentUser.user_id
+      }])
+      .select()
+      .single();
 
-        {/* The key prop forces TripList to re-render when a trip is created or joined */}
-        <TripList key={refreshTrigger} />
-      </div>
+    if (error) {
+      console.error('Error creating trip:', error);
+      return;
+    }
 
-      {/* --- Modals --- */}
-      {showCreateModal && (
-        <CreateTripModal
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={handleTripCreated}
-        />
-      )}
+    await supabase
+      .from('trip_members')
+      .insert([{
+        trip_id: trip.id,
+        user_id: currentUser.user_id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: 'admin',
+        can_edit: true
+      }]);
 
-      {showJoinModal && (
-        <JoinTripModal
-          onClose={() => setShowJoinModal(false)}
-          onSuccess={handleTripJoined}
-        />
-      )}
+    onSuccess();
+  };
 
-    </div>
-  );
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Create New Trip">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Trip Name
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="e.g., Tokyo Adventure 2024"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Brief description of your trip"
+            rows="3"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={formData.start_date}
+              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={formData.end_date}
+              onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cover Image URL (optional)
+          </label>
+          <input
+            type="url"
+            value={formData.cover_image}
+            onChange={(e) => setFormData({ ...formData, cover_image: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4">
+          <Button variant="secondary" onClick={onClose} type="button">
+            Cancel
+          </Button>
+          <Button type="submit">
+            Create Trip
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
 }
