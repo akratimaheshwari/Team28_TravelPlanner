@@ -40,17 +40,19 @@ export default function JoinTripModal({ onClose, onSuccess }) {
                     <button onClick={onClose} className="modal-close-button"><X /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>}
+                    {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }} role="alert">{error}</p>}
 
                     <input
                         type="text"
                         placeholder="Enter 6-digit Join Code"
                         className="input-field"
                         value={joinCode}
-                        onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                        onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
                         maxLength="6"
                         required
                         style={{ textTransform: 'uppercase' }}
+                        aria-label="Join Code"
+                        autoComplete="off"
                     />
                     
                     <button type="submit" className="button-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>

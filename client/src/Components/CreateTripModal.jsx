@@ -18,6 +18,12 @@ export default function CreateTripModal({ onClose, onSuccess }) {
             setError('All fields are required.');
             return;
         }
+        
+        // Validate that end date is after start date
+        if (new Date(endDate) <= new Date(startDate)) {
+            setError('End date must be after start date.');
+            return;
+        }
 
         setLoading(true);
         try {
@@ -41,7 +47,7 @@ export default function CreateTripModal({ onClose, onSuccess }) {
                     <button onClick={onClose} className="modal-close-button"><X /></button>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>}
+                    {error && <p style={{ color: '#ef4444', marginBottom: '1rem' }} role="alert">{error}</p>}
                     
                     <input
                         type="text"
@@ -50,6 +56,7 @@ export default function CreateTripModal({ onClose, onSuccess }) {
                         value={tripName}
                         onChange={(e) => setTripName(e.target.value)}
                         required
+                        aria-label="Trip Name"
                     />
                     <input
                         type="text"
@@ -58,6 +65,7 @@ export default function CreateTripModal({ onClose, onSuccess }) {
                         value={destination}
                         onChange={(e) => setDestination(e.target.value)}
                         required
+                        aria-label="Destination"
                     />
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <input
@@ -67,6 +75,7 @@ export default function CreateTripModal({ onClose, onSuccess }) {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             required
+                            aria-label="Start Date"
                         />
                         <input
                             type="date"
@@ -75,6 +84,7 @@ export default function CreateTripModal({ onClose, onSuccess }) {
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             required
+                            aria-label="End Date"
                         />
                     </div>
                     
